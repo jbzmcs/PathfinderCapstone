@@ -10,6 +10,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Stack;
 
 import javax.swing.JFrame;
 import javax.swing.BorderFactory;
@@ -542,19 +543,82 @@ public class PathFinding {
 		
 		// STUDY BREADTH-FIRST SEARCH AND APPLY THE KNOWLEDGE YOU LEARN IN THIS PART
 		public void BreadthFirst() {
-			// TODO: ADD BFS ALGORITHM 
+
+			ArrayList<Node> priority = new ArrayList<Node>();
+			priority.add(map[startx][starty]);
+			while(solving) {
+				if(priority.size() <= 0) {
+					solving = false;
+					break;
+				}
+				int hops = priority.get(0).getHops()+1;
+				ArrayList<Node> explored = exploreNeighbors1(priority.get(0), hops);
+				if(explored.size() > 0) {
+					priority.remove(0);
+					priority.addAll(explored);
+					Update();
+					delay();
+				} else {
+					priority.remove(0);
+				}
+			}
 		}
 
-		
+
+
+
 		// STUDY DEPTH-FIRST SEARCH AND APPLY THE KNOWLEDGE YOU LEARN IN THIS PART
 		public void DepthFirst() {
-			// TODO: ADD DFS ALGORITHM
+
+			Stack<Node> priority = new Stack<Node>();
+			priority.push(map[startx][starty]);
+			while(solving){
+				if(priority.size() <= 0){
+					solving = false;
+					break;
+				}
+				int hops = priority.peek().getHops()+1;
+				ArrayList<Node> explored = exploreNeighbors2(priority.peek(), hops);
+				if(explored.size() > 0){
+					Node current = priority.pop();
+					if(!explored.contains(current)){
+						for(int i = 0; i < explored.size(); i++){
+							priority.push(explored.get(i));
+							Update();
+							delay();
+						}
+					} else {
+						solving = false;
+					}
+				} else {
+					priority.pop();
+				}
+			}
 		}
 
 
 		// STUDY BELLMAN-FORD SEARCH AND APPLY THE KNOWLEDGE YOU LEARN IN THIS PART
 		public void BellmanFord() {
-			// TODO: ADD BELLMAN-FORD ALGORITHM
+
+			ArrayList<Node> priority = new ArrayList<Node>();	//CREATE A PRIORITY QUE
+			priority.add(map[startx][starty]);	//ADD THE START TO THE QUE
+			solving = true;
+			while(solving) {
+				if(priority.size() <= 0) {	//IF THE QUE IS 0 THEN NO PATH CAN BE FOUND
+					solving = false;
+					break;
+				}
+				int hops = priority.get(0).getHops()+1;	//INCREMENT THE HOPS VARIABLE
+				ArrayList<Node> explored = exploreNeighbors4(priority.get(0), hops);	//CREATE AN ARRAYLIST OF NODES THAT WERE EXPLORED
+				if(explored.size() > 0) {
+					priority.remove(0);	//REMOVE THE NODE FROM THE QUE
+					priority.addAll(explored);
+					Update();
+					delay();
+				} else {	//IF NO NODES WERE EXPLORED THEN JUST REMOVE THE NODE FROM THE QUE
+					priority.remove(0);
+				}
+			}
 		}
 		
 
@@ -577,6 +641,7 @@ public class PathFinding {
 			return sort;
 		}
 
+		// * EXPLORED NEIGHBORS METHODS
 		
 		public ArrayList<Node> exploreNeighbors(Node current, int hops) {	//EXPLORE NEIGHBORS
 			ArrayList<Node> explored = new ArrayList<Node>();	//LIST OF NODES THAT HAVE BEEN EXPLORED
@@ -595,6 +660,148 @@ public class PathFinding {
 			}
 			return explored;
 		}
+
+		private ArrayList<Node> exploreNeighbors1(Node current, int hops) {
+			ArrayList<Node> explored = new ArrayList<Node>();	//LIST OF NODES THAT HAVE BEEN EXPLORED
+			for(int a = -1; a <= 1; a++) {
+				for(int b = -1; b <= 1; b++) {
+					int xbound = current.getX()+a;
+					int ybound = current.getY()+b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX()-a;
+					ybound = current.getY()-b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX();
+					ybound = current.getY()+b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX()+a;
+					ybound = current.getY();
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX()-a;
+					ybound = current.getY();
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX();
+					ybound = current.getY()-b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+				}
+			}
+			return explored;
+		}
+
+		public ArrayList<Node> exploreNeighbors2(Node current, int hops){
+			ArrayList<Node> explored = new ArrayList<Node>();	//LIST OF NODES THAT HAVE BEEN EXPLORED
+			for(int a = -1; a <= 1; a++) {
+				for(int b = -1; b <= 1; b++) {
+					int xbound = current.getX()+a;
+					int ybound = current.getY();
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);	//EXPLORE THE NODE
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX();
+					ybound = current.getY()-b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX()-a;
+					ybound = current.getY();
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+					xbound = current.getX();
+					ybound = current.getY()+b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops) && neighbor.getType()!=2) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore(neighbor, current.getX(), current.getY(), hops);
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+				}
+			}
+			return explored;
+		}
+		public void explore3(Node current, int lastx, int lasty, int hops) {
+			//EXPLORE A NODE
+			if(current.getType()!=0 && current.getType() != 1){	//CHECK THAT THE NODE IS NOT THE START OR FINISH
+				if(current.getType() == 2){
+					current.setType(2);
+				} else {
+					current.setType(4);
+				}
+			}
+			current.setLastNode(lastx, lasty);	//KEEP TRACK OF THE NODE THAT THIS NODE IS EXPLORED FROM
+			current.setHops(hops);	//SET THE HOPS FROM THE START
+			if(current.getType() == 1) {//IF THE NODE IS THE FINISH THEN BACKTRACK TO GET THE PATH
+				backtrack(current.getLastX(), current.getLastY(),hops);
+			}
+		}
+
+		public ArrayList<Node> exploreNeighbors4(Node current, int hops) {	//EXPLORE NEIGHBORS
+			ArrayList<Node> explored = new ArrayList<Node>();	//LIST OF NODES THAT HAVE BEEN EXPLORED
+			for(int a = -1; a <= 1; a++) {
+				for(int b = -1; b <= 1; b++) {
+					int xbound = current.getX()+a;
+					int ybound = current.getY()+b;
+					if((xbound > -1 && xbound < cells) && (ybound > -1 && ybound < cells)) {	//MAKES SURE THE NODE IS NOT OUTSIDE THE GRID
+						Node neighbor = map[xbound][ybound];
+						if((neighbor.getHops()==-1 || neighbor.getHops() > hops)) {	//CHECKS IF THE NODE IS NOT A WALL AND THAT IT HAS NOT BEEN EXPLORED
+							explore3(neighbor, current.getX(), current.getY(), hops);	//EXPLORE THE NODE
+							explored.add(neighbor);	//ADD THE NODE TO THE LIST
+						}
+					}
+				}
+			}
+			return explored;
+		}
+
 		
 		public void explore(Node current, int lastx, int lasty, int hops) {	//EXPLORE A NODE
 			if(current.getType()!=0 && current.getType() != 1)	//CHECK THAT THE NODE IS NOT THE START OR FINISH
@@ -619,7 +826,7 @@ public class PathFinding {
 			solving = false;
 		}
 	}
-	
+
 	class Node {
 		
 		// 0 = start, 1 = finish, 2 = wall, 3 = empty, 4 = checked, 5 = finalpath
